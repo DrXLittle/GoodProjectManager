@@ -3,15 +3,15 @@ import bcryptjs from 'bcryptjs';
 import { generateToken } from '../utils/jwt';
 
 export class UserService {
-  async registerUser(email: string, name: string, password: string) {
+  async registerUser(username: string, name: string, password: string) {
     try {
       // Check if user exists
       const existing = await prisma.user.findUnique({
-        where: { email },
+        where: { username },
       });
 
       if (existing) {
-        throw new Error('User already exists');
+        throw new Error('Username already exists');
       }
 
       // Hash password
@@ -20,7 +20,7 @@ export class UserService {
       // Create user
       const user = await prisma.user.create({
         data: {
-          email,
+          username,
           name,
           passwordHash,
         },
@@ -29,13 +29,13 @@ export class UserService {
       // Generate token
       const token = generateToken({
         userId: user.id,
-        email: user.email,
+        username: user.username,
       });
 
       return {
         user: {
           id: user.id,
-          email: user.email,
+          username: user.username,
           name: user.name,
         },
         token,
@@ -46,10 +46,10 @@ export class UserService {
     }
   }
 
-  async loginUser(email: string, password: string) {
+  async loginUser(username: string, password: string) {
     try {
       const user = await prisma.user.findUnique({
-        where: { email },
+        where: { username },
       });
 
       if (!user) {
@@ -65,13 +65,13 @@ export class UserService {
       // Generate token
       const token = generateToken({
         userId: user.id,
-        email: user.email,
+        username: user.username,
       });
 
       return {
         user: {
           id: user.id,
-          email: user.email,
+          username: user.username,
           name: user.name,
         },
         token,
@@ -88,7 +88,7 @@ export class UserService {
         where: { id },
         select: {
           id: true,
-          email: true,
+          username: true,
           name: true,
           avatar: true,
         },

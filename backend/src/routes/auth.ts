@@ -7,13 +7,13 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { email, name, password } = req.body;
+    const { username, name, password } = req.body;
 
-    if (!email || !name || !password) {
+    if (!username || !name || !password) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await userService.registerUser(email, name, password);
+    const result = await userService.registerUser(username, name, password);
     res.status(201).json(result);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
@@ -23,13 +23,13 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await userService.loginUser(email, password);
+    const result = await userService.loginUser(username, password);
     res.status(200).json(result);
   } catch (error: any) {
     res.status(401).json({ error: error.message });

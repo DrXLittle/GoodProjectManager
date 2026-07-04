@@ -2,102 +2,129 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 
+// Default credentials for testing
+const DEFAULT_USERS = [
+  { username: 'admin', password: 'admin123', name: 'Admin User' },
+  { username: 'user1', password: 'user123', name: 'User One' },
+  { username: 'user2', password: 'user123', name: 'User Two' },
+  { username: 'user3', password: 'user123', name: 'User Three' },
+  { username: 'manager', password: 'manager123', name: 'Project Manager' },
+]
+
 const LoginPage = () => {
   const navigate = useNavigate()
   const { login } = useAuthStore()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [showDefaults, setShowDefaults] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+      // Check default credentials
+      const user = DEFAULT_USERS.find(u => u.username === username && u.password === password)
 
-      if (!response.ok) {
-        throw new Error('Login failed')
+      if (!user) {
+        setError('Invalid username or password')
+        return
       }
 
-      const data = await response.json()
-      login(data.token, data.user)
+      // Mock token generation
+      const token = `token_${user.username}_${Date.now()}`
+      login(token, {
+        id: user.username,
+        username: user.username,
+        name: user.name,
+      })
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Login failed')
-    } finally {
-      setLoading(false)
     }
+  }
+
+  const handleQuickLogin = (user: typeof DEFAULT_USERS[0]) => {
+    setUsername(user.username)
+    setPassword(user.password)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1 text-center">
           GoodPM
         </h1>
-        <p className="text-center text-gray-600 mb-8">Project Management</p>
+        <p className="text-center text-gray-600 mb-6 text-sm">Project Management</p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Username
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your email"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter username"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your password"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter password"
               required
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs">
               {error}
             </div>
           )}
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 text-lg"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            Login
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <p className="text-center text-gray-600 mb-4">
-            Don't have an account?
-          </p>
+        <div className="mt-6 pt-6 border-t border-gray-200">
           <button
-            onClick={() => navigate('/register')}
-            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold py-3 px-4 rounded-lg transition duration-200 text-lg"
+            type="button"
+            onClick={() => setShowDefaults(!showDefaults)}
+            className="w-full text-blue-600 hover:text-blue-700 font-medium text-sm py-1"
           >
-            Sign Up
+            {showDefaults ? '隐藏默认账户' : '显示默认账户'}
           </button>
+
+          {showDefaults && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-gray-600 font-medium">点击快速登录:</p>
+              {DEFAULT_USERS.map(user => (
+                <button
+                  key={user.username}
+                  type="button"
+                  onClick={() => handleQuickLogin(user)}
+                  className="w-full text-left bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded text-xs transition"
+                >
+                  {user.username} / {user.password}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
