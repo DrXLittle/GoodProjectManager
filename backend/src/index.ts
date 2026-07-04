@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
+import redisClient from './utils/redis';
+import authRoutes from './routes/auth';
+import projectRoutes from './routes/projects';
 
 dotenv.config();
 
@@ -25,10 +28,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
+// Routes
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
 
 // WebSocket connection
 io.on('connection', (socket) => {
@@ -49,9 +55,20 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 const PORT = process.env.PORT || 3000;
 
-httpServer.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`WebSocket listening on ws://localhost:${PORT}`);
-});
+// Connect to Redis and start server
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log('Redis connected');
+
+    httpServer.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`WebSocket listening on ws://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+})();
 
 export { app, io, httpServer };
