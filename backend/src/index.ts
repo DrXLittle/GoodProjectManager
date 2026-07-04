@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
-import redisClient from './utils/redis';
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 
@@ -29,7 +28,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.get('/health', (req, res) => {
+app.get('/health', (_req: express.Request, res: express.Response) => {
   res.json({ status: 'ok' });
 });
 
@@ -37,7 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 
 // WebSocket connection
-io.on('connection', (socket) => {
+io.on('connection', (socket: any) => {
   console.log(`User connected: ${socket.id}`);
 
   socket.on('disconnect', () => {
@@ -46,7 +45,7 @@ io.on('connection', (socket) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
   res.status(err.status || 500).json({
     error: err.message || 'Internal Server Error',
@@ -55,20 +54,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 const PORT = process.env.PORT || 3000;
 
-// Connect to Redis and start server
-(async () => {
-  try {
-    await redisClient.connect();
-    console.log('Redis connected');
-
-    httpServer.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`WebSocket listening on ws://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-})();
+httpServer.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`WebSocket listening on ws://localhost:${PORT}`);
+});
 
 export { app, io, httpServer };
