@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthStore } from './store/auth'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import Dashboard from './pages/Dashboard'
+import ProjectDetail from './pages/ProjectDetail'
 
 const App = () => {
   const { token } = useAuthStore()
@@ -11,7 +13,9 @@ const App = () => {
       <Routes>
         {token ? (
           <>
-            <Route path="/dashboard" element={<div className="p-8">Dashboard - Coming Soon</div>} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/project/:projectId" element={<ProjectDetail />} />
+            <Route path="/project/:projectId/edit" element={<div className="p-8">项目编辑 - 开发中</div>} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </>
         ) : (
